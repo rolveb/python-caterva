@@ -639,7 +639,7 @@ def vlmeta__setitem__(self, name, content):
 
 def vlmeta__len__(self):
     cdef caterva_array_t *arr = <caterva_array_t *><uintptr_t> self.c_array
-    return arr.sc.nmetalayers
+    return arr.sc.nvlmetalayers
 
 def vlmeta_keys(self):
     cdef caterva_array_t *arr = <caterva_array_t *><uintptr_t> self.c_array
