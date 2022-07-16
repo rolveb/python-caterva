@@ -1,6 +1,10 @@
 Release notes
 =============
 
+Changes from 0.7.3 to 0.7.4
+
+* Added variable-length metalayers
+
 Changes from 0.7.2 to 0.7.3
 ---------------------------
 

@@ -86,6 +86,7 @@ cdef extern from "blosc2.h":
         blosc2_metalayer *metalayers[BLOSC2_MAX_METALAYERS];
         int16_t nmetalayers;
         blosc2_metalayer *vlmetalayers[BLOSC2_MAX_VLMETALAYERS];
+        int16_t nvlmetalayers;
         blosc2_btune *udbtune;
 
     int blosc2_meta_exists(blosc2_schunk *schunk, const char *name)
@@ -94,6 +95,14 @@ cdef extern from "blosc2.h":
     int blosc2_meta_update(blosc2_schunk *schunk, const char *name, uint8_t *content,
                                     int32_t content_len)
     int blosc2_meta_get(blosc2_schunk *schunk, const char *name, uint8_t ** content,
+                    int32_t *content_len)
+		    
+    int blosc2_vlmeta_exists(blosc2_schunk *schunk, const char *name)
+    int blosc2_vlmeta_add(blosc2_schunk *schunk, const char *name, uint8_t *content,
+                                 int32_t content_len)
+    int blosc2_vlmeta_update(blosc2_schunk *schunk, const char *name, uint8_t *content,
+                                    int32_t content_len)
+    int blosc2_vlmeta_get(blosc2_schunk *schunk, const char *name, uint8_t ** content,
                     int32_t *content_len)
 
 
@@ -602,5 +611,40 @@ def meta_keys(self):
     keys = []
     for i in range(meta__len__(self)):
         name = arr.sc.metalayers[i].name.decode("utf-8")
+        keys.append(name)
+    return keys
+
+def vlmeta__contains__(self, name):
+    cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    n = blosc2_vlmeta_exists(array.sc, name)
+    return False if n < 0 else True
+
+def vlmeta__getitem__(self, name):
+    cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    cdef uint8_t *content
+    cdef int32_t content_len
+    n = blosc2_vlmeta_get(array.sc, name, &content, &content_len)
+    return PyBytes_FromStringAndSize(<char *> content, content_len)
+
+def vlmeta__setitem__(self, name, content):
+    cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    //old_content = vlmeta__getitem__(self, name)
+    //if len(old_content) != len(content):
+    //    raise ValueError("The length of the content in a metalayer cannot change.")
+    n = blosc2_vlmeta_update(array.sc, name, content, len(content))
+    return n
+
+def vlmeta__len__(self):
+    cdef caterva_array_t *arr = <caterva_array_t *><uintptr_t> self.c_array
+    return arr.sc.nmetalayers
+
+def vlmeta_keys(self):
+    cdef caterva_array_t *arr = <caterva_array_t *><uintptr_t> self.c_array
+    keys = []
+    for i in range(vlmeta__len__(self)):
+        name = arr.sc.vlmetalayers[i].name.decode("utf-8")
         keys.append(name)
     return keys
